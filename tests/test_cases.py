@@ -17,41 +17,57 @@ class SampleTestCase(unittest.TestCase):
 
     # CASE 1 : Very Basic Test case
     def test_sample_test_case(self):
+        """
+        This test case is testing method function of ProductionClass.
+        """
         p_class = ProductionClass()
         resp = p_class.method('1')
         self.assertEqual(1,resp)
 
-
-
     # CASE 2 : Without mocking function test case
     def test_google_resp_messages(self):
+        """
+        This test is testing get_goolge_url_status_message 
+        function of ProductionClass.This function check the status 
+        of an URL and return cutomize message.
+        """
         p_class = ProductionClass()
         resp = p_class.get_goolge_url_status_message()
-        #self.assertEqual(resp,"ok", msg="Expected okk but got resp = {0}".format(resp))
         self.assertTrue(resp!="ok",msg="Expected okk but got resp = {0}".format(resp))
-        #self.assertIn('temp',['temp'])
-        # assertTrue 
-        # assertIs
-    
+        # Try to use msg to give better visiblity why the test case failed.
+        # Whenever we are doing assert on Boolean values, we should always give message.
 
+    # CASE 3: Test case using Mock
+    # patch is the decorator from mock, it will mock the object and pass it to the underlying functin.
+    # It accepts the full path (sys.path) of the object/method to be mocked.
+    @patch('sample_tests.sample_api.API.status')
+    def test_google_resp_messages_new(self, g_api_method):
+        """
+        Above test case `test_google_resp_messages` simply call the
+        function and return the cutom message by actually invoking the 
+        API call to the URL.
+        However purpose of the unit test case should be to test the functionality 
+        of get_goolge_url_status_message method, not the underlying API.
 
-    
-    # CASE 3: Mocki
+        In this test case, we mock the `status` method of API class.
+        Also to test all scenarios, we assign different return value to this mocked method. 
+        This way we don't make the actual API call, but just mock it's behaviour.
 
-    
-    
-    @patch('sample_tests.sample_api.API.status') # full path from sys.path
-    def test_google_resp_messages_new(self,g_api_method):
+        `When to use Mock` 
+           - Any method which is making API call, DB call or any other external dependency.
+
+        @params
+            -`g_api_method` : Mocked instance of `sample_tests.sample_api.API.status`
+        """
         p_class = ProductionClass()
-        # case 1, 200:
 
-        g_api_method.return_value = 200
+        g_api_method.return_value = 200 
+        # when `sample_tests.sample_api.API.status` will be called in this context, it will return 200
         resp = p_class.get_goolge_url_status_message()
-
         self.assertEqual(resp,"ok")
 
-
         g_api_method.return_value = 302
+        # when `sample_tests.sample_api.API.status` will be called in this context, it will return 302
         resp = p_class.get_goolge_url_status_message()
         self.assertEqual(resp,"redirection")
 
@@ -59,20 +75,15 @@ class SampleTestCase(unittest.TestCase):
         resp= p_class.get_goolge_url_status_message()
         self.assertEqual(resp,"Error")
 
-
         g_api_method.return_value = "Error"
         resp= p_class.get_goolge_url_status_message()
         self.assertEqual(resp,"Network")
-
 
         g_api_method.return_value = None
         resp= p_class.get_goolge_url_status_message()
         self.assertEqual(resp,"UNKNOWN")
 
-
-
-    """
-    # Case 3: Parameterized
+    # Case 4: Using Parameterized
     @parameterized.expand([
         ("OK", 200,"ok"),
         ("REDIRECT", 302,"redirection"),
@@ -82,17 +93,25 @@ class SampleTestCase(unittest.TestCase):
     ])
     @patch('sample_tests.sample_api.API.status')
     def test_google_resp_messages_new(self, name, input_case, expected, g_api_method):
+        """
+        Parameterized accept lists of iterables(list/tupple),
+        it calls the same test case multiple times with value in each iterable as parameters.
+
+        :param name: append `name` to current test case name. First value in iterable.
+        :param input_case: input value against which we want to test. Second value in iterable.
+        :param expected: expected respone for each test case. Third value in iterable.
+        :param g_api_method: Mocked object of `sample_tests.sample_api.API.status`
+
+        When we run this test case, it will run 5 times for 5 iterables. in each call 
+        values of `name`,`input_case` and `expected` will change.
+
+        This test case serve the same purpose that of `test_google_resp_messages_new`.
+        """
         p_class = ProductionClass()
 
         g_api_method.return_value = input_case
         resp = p_class.get_goolge_url_status_message()
         self.assertEqual(resp, expected)
-
-    """
-    """
-
-    
-
 
     @patch('sample_tests.sample_api.API',spec=API) # relative path
     def test_google_resp_messages_new_auto_spec(self,g_api):
