@@ -40,8 +40,6 @@ class ProductionClass(object):
 
         api_status = API(G_URL).status()
         #other_attr = API(G_URL).other_attr
-
-        
         if api_status == 200:
             return "ok"
         elif api_status == 302:

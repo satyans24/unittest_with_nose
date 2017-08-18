@@ -119,13 +119,14 @@ class SampleTestCase(unittest.TestCase):
         resp = p_class.get_goolge_url_status_message()
         self.assertEqual(resp, expected)
 
-    # Case 5: Using spec
+    # Case 5: Using autospec
     @patch('main.sample_api.API', spec=API) # relative path
     def test_google_resp_messages_new_auto_spec(self, g_api):
         """
-
-        :param g_api:
-        :return:
+        Patch in mock has 1 disadvantage that if there is a change in mocked function's parameters, tests will still pass
+        but we would almost always want to catch passing incorrect parameters to any function we patch hence using
+        `autospec` True gives this advantage, now this test will fail if `status` function's declaration changes in future
+        :param g_api: mocked main.sample_api.API class
         """
         p_class = ProductionClass()
         # case 1, 200:
@@ -135,10 +136,13 @@ class SampleTestCase(unittest.TestCase):
         resp = p_class.get_goolge_url_status_message()
 
         self.assertEqual(resp,"UNKNOWN")
-    """
 
     
-    def test_google_resp_messages_new_auto_spec(self):
+    def test_google_resp_messages_new_auto_spec_another_way(self):
+        """
+        can also use autospec directly
+        :return:
+        """
         p_class = ProductionClass()
         # case 1, 200:
         m_method = create_autospec(API.status,return_value=200)
@@ -147,8 +151,6 @@ class SampleTestCase(unittest.TestCase):
         resp = p_class.get_goolge_url_status_message()
 
         self.assertEqual(resp,"ok")
-
-
 
     """
     @patch("main.sample_api.requests.Response")
@@ -166,11 +168,9 @@ class SampleTestCase(unittest.TestCase):
         resp_g = p_class.get_status_obj_from_requests("GET")
         self.assertEqual(200,resp_g)
 
-        
         resp_obj.status_code = 405
         resp_p = p_class.get_status_obj_from_requests("POST")
         self.assertEqual(405,resp_p)
-
 
         resp_p = p_class.get_status_obj_from_requests("NONE")
         self.assertEqual(404, resp_p)
@@ -204,8 +204,23 @@ class SampleTestCase(unittest.TestCase):
     ])
     @patch("main.sample_api.requests.Response")
     @patch("main.sample_api.requests")
-    def test_get_status_obj_from_requests_side_effect(self,call_type, st_code, r_object,resp_obj):
+    def test_get_status_obj_from_requests_side_effect(self, call_type, st_code, r_object, resp_obj):
+        """
+        When you cover almost everything in code using mock, you generally remains with "how do I cover the exceptions"
+        `side_effect` is 1 of the simplest answer to it.
+        in this test, we are intentionally adding `AttributeError` in side_effect property of the mocked function
+        which simulates the exact behaviour of exception raise in production and so it covers the exception block
+        of your code as well.
 
+        :param call_type: call type is input to underlying function we are testing
+        :param st_code: status code to mock with
+        :param r_object: mock request object
+        :param resp_obj: mock response object
+        Also note here, while using multiple patch, the decorators are applied bottom-up and the order of the parameters need to match this.
+        Why: this is how python makes the order of execution for this test:
+        main.sample_api.requests.Response(main.sample_api.requests(test_get_status_obj_from_requests_side_effect))
+        and hence parameters order should be carefully written (bottom-up/reverse of patch)
+        """
         r_object.get.return_value = resp_obj
         r_object.post.return_value = resp_obj
 
@@ -215,11 +230,10 @@ class SampleTestCase(unittest.TestCase):
         resp = p_class.get_status_obj_from_requests_side_effect(call_type)
         self.assertEqual(st_code,resp)
 
-
         r_object.get.side_effect = AttributeError()
         r_object.post.side_effect = AttributeError()
         p_class = ProductionClass()
         resp = p_class.get_status_obj_from_requests_side_effect(call_type)
         self.assertEqual(404,resp)
         # https://github.com/moengage/segmentation/blob/develop/tests_key_metrics/test_base/test_key_metrics_manager.py#L295
-    """
+
