@@ -43,6 +43,7 @@ class SampleTestCase(unittest.TestCase):
         # Try to use msg to give better visiblity why the test case failed.
         # Whenever we are doing assert on Boolean values, we should always give message.
 
+
     # CASE 3: Test case using Mock
     # patch is the decorator from mock, it will mock the object and pass it to the underlying functin.
     # It accepts the full path (sys.path) of the object/method to be mocked.
@@ -152,7 +153,7 @@ class SampleTestCase(unittest.TestCase):
 
         self.assertEqual(resp,"ok")
 
-    """
+
     @patch("main.sample_api.requests.Response")
     @patch("main.sample_api.requests")
     def test_get_status_obj_from_requests(self, r_object, resp_obj):
@@ -175,8 +176,7 @@ class SampleTestCase(unittest.TestCase):
         resp_p = p_class.get_status_obj_from_requests("NONE")
         self.assertEqual(404, resp_p)
 
-    """
-    """
+
     @parameterized.expand([
         ("GET", 200),
         ("POST", 405),
@@ -194,7 +194,7 @@ class SampleTestCase(unittest.TestCase):
         p_class = ProductionClass()
         resp = p_class.get_status_obj_from_requests(call_type)
         self.assertEqual(st_code,resp)
-    """
+
 
     
     @parameterized.expand([
